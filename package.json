@@ -1,0 +1,10 @@
+{
+  "name": "watch-load",
+  "version": "0.0.0",
+  "description": "Watches modules that are loaded by Node.js and emits an event for each.",
+  "main": "dist/watch-load.js",
+  "author": "Thorsten Lorenz <thlorenz@gmx.de>",
+  "license": "MIT",
+  "private": false,
+  "repository": "git@github.com:cypress-io/watch-load.git"
+}
