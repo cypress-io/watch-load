@@ -6,5 +6,8 @@
   "author": "Thorsten Lorenz <thlorenz@gmx.de>",
   "license": "MIT",
   "private": false,
-  "repository": "git@github.com:cypress-io/watch-load.git"
+  "repository": "git@github.com:cypress-io/watch-load.git",
+  "devDependencies": {
+    "@types/node": "^16.10.4"
+  }
 }
