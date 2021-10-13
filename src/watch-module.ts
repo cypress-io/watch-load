@@ -31,8 +31,8 @@ class ModuleWatcher extends EventEmitter {
 // -----------------
 // @ts-ignore
 const origLoad = Module._load
-// @ts-ignore
-Module._load = function (
+
+function moduleLoad(
   moduleUri: string,
   parent: NodeModule | undefined,
   isMain: boolean
@@ -49,10 +49,26 @@ Module._load = function (
   return origLoad.apply(Module, [moduleUri, parent, isMain])
 }
 
+function maybeOverride() {
+  // @ts-ignore
+  if (Module._load != moduleLoad) {
+    // @ts-ignore
+    Module._load = moduleLoad
+  }
+}
+
+function maybeRestore() {
+  if (ModuleWatcher.registeredWatchers.size === 0) {
+    // @ts-ignore
+    Module._load = origLoad
+  }
+}
+
 // -----------------
 // API
 // -----------------
 export function addWatcher(filter: LoadedModuleFilter) {
+  maybeOverride()
   verifyFilter(filter)
   const moduleWatcher = new ModuleWatcher(filter)
   ModuleWatcher.registeredWatchers.add(moduleWatcher)
@@ -60,7 +76,9 @@ export function addWatcher(filter: LoadedModuleFilter) {
 }
 
 export function removeWatcher(moduleWatcher: ModuleWatcher) {
-  return ModuleWatcher.registeredWatchers.delete(moduleWatcher)
+  const found = ModuleWatcher.registeredWatchers.delete(moduleWatcher)
+  maybeRestore()
+  return found
 }
 
 function verifyFilter(filter: LoadedModuleFilter) {
