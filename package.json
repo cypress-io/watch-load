@@ -2,12 +2,26 @@
   "name": "watch-load",
   "version": "0.0.0",
   "description": "Watches modules that are loaded by Node.js and emits an event for each.",
-  "main": "dist/watch-load.js",
+  "main": "dist/src/watch-load.js",
+  "types": "dist/src/watch-module.d.ts",
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json"
+  },
   "author": "Thorsten Lorenz <thlorenz@gmx.de>",
   "license": "MIT",
   "private": false,
   "repository": "git@github.com:cypress-io/watch-load.git",
   "devDependencies": {
-    "@types/node": "^16.10.4"
+    "@types/debug": "^4.1.7",
+    "@types/node": "^16.10.4",
+    "@types/tape": "^4.13.2",
+    "foreach": "^2.0.5",
+    "tape": "^5.3.1",
+    "typescript": "^4.4.4"
+  },
+  "dependencies": {
+    "debug": "^4.3.2",
+    "spok": "^1.3.0",
+    "tslib": "^2.3.1"
   }
 }
