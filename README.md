@@ -2,6 +2,8 @@
 
 Watches modules that are loaded by Node.js and emits an event for each.
 
+[Documentation](https://cypress-io.github.io/watch-load/docs/)
+
 ## Example
 
 ```ts
