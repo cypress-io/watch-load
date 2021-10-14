@@ -10,6 +10,12 @@ import test from 'tape'
 import spok from 'spok'
 import Module from 'module'
 
+function clearRequireCache() {
+  for (const key of Object.keys(require.cache)) {
+    delete require.cache[key]
+  }
+}
+
 test('adding and removing watchers with default config', (t) => {
   _reset()
   // @ts-ignore
@@ -85,12 +91,6 @@ test('adding and removing watchers with config = { restore: true }', (t) => {
   t.end()
 })
 
-function clearRequireCache() {
-  for (const key of Object.keys(require.cache)) {
-    delete require.cache[key]
-  }
-}
-
 test('watching core modules only', (t) => {
   _reset()
   clearRequireCache()
@@ -102,7 +102,7 @@ test('watching core modules only', (t) => {
   })
 
   t.comment('+++ requiring user module +++')
-  require('../package.json')
+  require('./fixtures/local-module')
   t.equal(requiredModule, null, 'does not emit watched module')
 
   t.comment('+++ requiring node module +++')
@@ -112,11 +112,46 @@ test('watching core modules only', (t) => {
 
   t.comment('+++ requiring core module fs +++')
   require('fs')
-  spok(t, requiredModule!, {
-    $topic: 'requiredModule',
-    isCoreModule: true,
-    isNodeModule: false,
-    moduleUri: 'fs',
+  t.ok(requiredModule != null, 'emits a module match')
+  if (requiredModule != null) {
+    spok(t, <LoadedModuleInfo>requiredModule, {
+      $topic: 'requiredModule',
+      isCoreModule: true,
+      isNodeModule: false,
+      moduleUri: 'fs',
+    })
+  }
+  t.end()
+})
+
+test('watching node modules only, requiring one directly', (t) => {
+  _reset()
+  clearRequireCache()
+
+  const watcher = addWatcher({ nodeModules: true, userModules: false })
+  let requiredModule: LoadedModuleInfo | null = null
+  watcher.on('match', (match) => {
+    requiredModule = match
   })
+
+  t.comment('+++ requiring user module +++')
+  require('./fixtures/local-module')
+
+  t.comment('+++ requiring core module fs +++')
+  require('fs')
+  t.equal(requiredModule, null, 'does not emit watched module')
+
+  t.comment('+++ requiring node module +++')
+  // a node_module that doesn't require any core modules
+  require('foreach')
+  t.ok(requiredModule != null, 'emits a module match')
+  if (requiredModule != null) {
+    spok(t, <LoadedModuleInfo>requiredModule, {
+      $topic: 'requiredModule',
+      isCoreModule: false,
+      isNodeModule: true,
+      moduleUri: 'foreach',
+    })
+  }
   t.end()
 })

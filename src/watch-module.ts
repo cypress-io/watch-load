@@ -33,7 +33,6 @@ class ModuleWatcher extends EventEmitter {
       logTrace('Loaded %s', prettyPrint(loadedModule))
     }
     for (const watcher of this.registeredWatchers) {
-      debugger
       if (watcher._matchesFilter(loadedModule)) {
         watcher.emit('match', loadedModule)
       }
@@ -60,7 +59,7 @@ function moduleLoad(
 ) {
   const parentUri = parent?.id ?? '<root>'
   const isCoreModule = isCore(moduleUri)
-  const isNodeModule = !isCoreModule && isNodeMod(moduleUri)
+  const isNodeModule = isNodeMod(isCoreModule, moduleUri, parentUri)
   ModuleWatcher.onModuleLoaded({
     moduleUri,
     parentUri,
@@ -181,8 +180,21 @@ function isCore(uri: string) {
 }
 
 const NODE_MODULE_RX = /node_modules\/.+/
-function isNodeMod(uri: string) {
-  return NODE_MODULE_RX.test(uri)
+const USER_MODULE_RX = /^[./\\]/
+function isNodeMod(isCoreModule: boolean, uri: string, _parentUri: string) {
+  if (isCoreModule) return false
+
+  // easycase, `node_modules/` is in uri
+  const inNodeModulePath = NODE_MODULE_RX.test(uri)
+  if (inNodeModulePath) return true
+
+  // trickier case, i.e. `require('foreach')` has no `node_modules/` in path
+  // but is clearly not a user module either
+  const isUserModule = USER_MODULE_RX.test(uri)
+  if (!isUserModule) return true
+
+  // TODO(thlorenz): node_modules requiring relative modules (detect via parentUri)
+  return false
 }
 
 // -----------------
