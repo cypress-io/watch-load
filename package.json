@@ -7,7 +7,8 @@
   "scripts": {
     "build": "tsc -p ./tsconfig.json",
     "pretest": "yarn build",
-    "test": "tape ./dist/tests/*.js"
+    "test": "tape ./dist/tests/*.js",
+    "doc": "typedoc src/watch-module.ts --readme README.md"
   },
   "author": "Thorsten Lorenz <thlorenz@gmx.de>",
   "license": "MIT",
