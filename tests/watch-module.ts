@@ -225,3 +225,70 @@ test('watching user modules only', (t) => {
   }
   t.end()
 })
+
+test('watching user modules only with one watcher and user modules + node_modules with another', (t) => {
+  _reset()
+  clearRequireCache()
+
+  const userModulesOnly = addWatcher({ userModules: true })
+  const userModulesAndNodeModules = addWatcher({
+    nodeModules: true,
+    userModules: true,
+  })
+
+  const requiredUserModulesOnly: LoadedModuleInfo[] = []
+  const requiredUserModulesAndNodeModules: LoadedModuleInfo[] = []
+
+  userModulesOnly.on('match', (match) => {
+    requiredUserModulesOnly.push(match)
+  })
+  userModulesAndNodeModules.on('match', (match) => {
+    requiredUserModulesAndNodeModules.push(match)
+  })
+
+  t.comment('+++ requiring core module fs +++')
+  require('fs')
+
+  t.comment('+++ requiring node module +++')
+  require('foreach')
+
+  t.comment('+++ requiring user module +++')
+  require('./fixtures/local-module')
+
+  spok(
+    t,
+    requiredUserModulesOnly,
+    Object.assign(
+      [
+        {
+          moduleUri: './fixtures/local-module',
+          isCoreModule: false,
+          isNodeModule: false,
+        },
+      ],
+      { $topic: 'requiredUserModulesOnly' }
+    )
+  )
+  spok(
+    t,
+    requiredUserModulesAndNodeModules,
+    Object.assign(
+      [
+        {
+          moduleUri: 'foreach',
+          parentUri: '.',
+          isCoreModule: false,
+          isNodeModule: true,
+        },
+        {
+          moduleUri: './fixtures/local-module',
+          parentUri: '.',
+          isCoreModule: false,
+          isNodeModule: false,
+        },
+      ],
+      { $topic: 'requiredUserModulesAndNodeModules' }
+    )
+  )
+  t.end()
+})
