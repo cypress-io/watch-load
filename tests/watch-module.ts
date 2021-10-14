@@ -177,7 +177,6 @@ test('watching node modules only, requiring one that requires another one', (t) 
       [
         {
           moduleUri: 'has-symbols',
-          parentUri: '.',
           isCoreModule: false,
           isNodeModule: true,
         },
@@ -276,13 +275,11 @@ test('watching user modules only with one watcher and user modules + node_module
       [
         {
           moduleUri: 'foreach',
-          parentUri: '.',
           isCoreModule: false,
           isNodeModule: true,
         },
         {
           moduleUri: './fixtures/local-module',
-          parentUri: '.',
           isCoreModule: false,
           isNodeModule: false,
         },
