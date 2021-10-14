@@ -1,4 +1,4 @@
-# watch-module
+# watch-module [![Build and Test](https://github.com/cypress-io/watch-load/actions/workflows/build-and-test.yaml/badge.svg?branch=master)](https://github.com/cypress-io/watch-load/actions/workflows/build-and-test.yaml)
 
 Watches modules that are loaded by Node.js and emits an event for each.
 
