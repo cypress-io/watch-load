@@ -1,9 +1,12 @@
 import EventEmitter from 'events'
 import Module from 'module'
+import { strict as assert } from 'assert'
 
 import debug from 'debug'
 const logDebug = debug('watch-module:debug')
 const logTrace = debug('watch-module:trace')
+
+const DEFAULT_MODULE_WATCHER_CONFIG = { restore: false }
 
 // -----------------
 // Emitter
@@ -36,6 +39,8 @@ class ModuleWatcher extends EventEmitter {
       }
     }
   }
+
+  static config: ModuleWatcherConfig = DEFAULT_MODULE_WATCHER_CONFIG
 }
 
 // -----------------
@@ -43,10 +48,10 @@ class ModuleWatcher extends EventEmitter {
 // -----------------
 
 // NOTE: we need to watch out here for conflicting modules that also patch
-// Module._load also when it comes to restoring it
+// Module._load
 
 // @ts-ignore
-const origLoad = Module._load
+let origLoad: Function | undefined
 
 function moduleLoad(
   moduleUri: string,
@@ -62,19 +67,28 @@ function moduleLoad(
     isCoreModule,
     isNodeModule,
   })
+
+  assert(
+    origLoad != null,
+    'origLoad should have been set during Module._load override'
+  )
   return origLoad.apply(Module, [moduleUri, parent, isMain])
 }
 
 function maybeOverride() {
-  // @ts-ignore
-  if (Module._load != moduleLoad) {
+  if (origLoad == null) {
+    // @ts-ignore
+    origLoad = Module._load
     // @ts-ignore
     Module._load = moduleLoad
   }
 }
 
 function maybeRestore() {
-  if (ModuleWatcher.registeredWatchers.size === 0) {
+  if (
+    ModuleWatcher.config.restore &&
+    ModuleWatcher.registeredWatchers.size === 0
+  ) {
     // @ts-ignore
     Module._load = origLoad
   }
@@ -115,12 +129,34 @@ export function watcherStats() {
   return { watchers: ModuleWatcher.registeredWatchers.size }
 }
 
+export function configure(config: ModuleWatcherConfig) {
+  ModuleWatcher.config = config
+}
+
+/**
+ * Resets global state of {@link ModuleWatcher} as well as [Module._load].
+ * Only call this when testing.
+ */
+export function _reset() {
+  if (origLoad != null) {
+    // @ts-ignore
+    Module._load = origLoad
+    origLoad = undefined
+  }
+  ModuleWatcher.registeredWatchers.clear()
+  ModuleWatcher.config = DEFAULT_MODULE_WATCHER_CONFIG
+}
+
 function verifyFilter(filter: LoadedModuleFilter) {
   if (!filter.coreModules && !filter.nodeModules && !filter.userModules) {
     throw new Error(
       `Invalid filter ${filter}, at least one prop needs to be true`
     )
   }
+}
+
+export type ModuleWatcherConfig = {
+  restore: boolean
 }
 
 export type LoadedModuleInfo = {

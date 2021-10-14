@@ -1,16 +1,20 @@
 import {
   addWatcher,
+  configure,
   LoadedModuleInfo,
   removeWatcher,
   watcherStats,
+  _reset,
 } from '../src/watch-module'
 import test from 'tape'
 import spok from 'spok'
 import Module from 'module'
 
-// @ts-ignore
-const origLoad = Module._load
-test('adding and removing watchers', (t) => {
+test('adding and removing watchers with default config', (t) => {
+  _reset()
+  // @ts-ignore
+  const origLoad = Module._load
+
   // @ts-ignore
   t.equal(Module._load, origLoad, 'Module._load unchanged')
 
@@ -47,6 +51,35 @@ test('adding and removing watchers', (t) => {
   spok(t, watcherStats(), { watchers: 0 })
 
   // @ts-ignore
+  t.notEqual(Module._load, origLoad, 'Module._load not restored')
+
+  t.end()
+})
+
+test('adding and removing watchers with config = { restore: true }', (t) => {
+  _reset()
+  // @ts-ignore
+  const origLoad = Module._load
+  configure({ restore: true })
+
+  // @ts-ignore
+  t.equal(Module._load, origLoad, 'Module._load unchanged')
+
+  const watcher1 = addWatcher()
+  spok(
+    t,
+    watcherStats(),
+    { watchers: 1 },
+    'after adding one watcher we have one'
+  )
+  // @ts-ignore
+  t.notEqual(Module._load, origLoad, 'Module._load overridden')
+
+  const removedFirst = removeWatcher(watcher1)
+  t.ok(removedFirst, 'watcher 1 successfully removed')
+  spok(t, watcherStats(), { watchers: 0 })
+
+  // @ts-ignore
   t.equal(Module._load, origLoad, 'Module._load restored')
 
   t.end()
@@ -59,6 +92,7 @@ function clearRequireCache() {
 }
 
 test('watching core modules only', (t) => {
+  _reset()
   clearRequireCache()
 
   const watcher = addWatcher({ coreModules: true, userModules: false })
