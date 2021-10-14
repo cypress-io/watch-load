@@ -5,7 +5,9 @@
   "main": "dist/src/watch-load.js",
   "types": "dist/src/watch-module.d.ts",
   "scripts": {
-    "build": "tsc -p ./tsconfig.json"
+    "build": "tsc -p ./tsconfig.json",
+    "pretest": "yarn build",
+    "test": "tape ./dist/tests/*.js"
   },
   "author": "Thorsten Lorenz <thlorenz@gmx.de>",
   "license": "MIT",
