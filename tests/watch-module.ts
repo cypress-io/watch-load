@@ -15,6 +15,7 @@ function clearRequireCache() {
     delete require.cache[key]
   }
 }
+
 test('adding and removing watchers with default config', (t) => {
   _reset()
   // @ts-ignore
@@ -189,5 +190,38 @@ test('watching node modules only, requiring one that requires another one', (t) 
       { $topic: 'requiredModules' }
     )
   )
+  t.end()
+})
+
+test('watching user modules only', (t) => {
+  _reset()
+  clearRequireCache()
+
+  const watcher = addWatcher({ userModules: true })
+  let requiredModule: LoadedModuleInfo | null = null
+  watcher.on('match', (match) => {
+    requiredModule = match
+  })
+
+  t.comment('+++ requiring core module fs +++')
+  require('fs')
+  t.equal(requiredModule, null, 'does not emit watched module')
+
+  t.comment('+++ requiring node module +++')
+  // a node_module that doesn't require any core modules
+  require('foreach')
+  t.equal(requiredModule, null, 'does not emit watched module')
+
+  t.comment('+++ requiring user module +++')
+  require('./fixtures/local-module')
+  t.ok(requiredModule != null, 'emits a module match')
+  if (requiredModule != null) {
+    spok(t, <LoadedModuleInfo>requiredModule, {
+      $topic: 'requiredModule',
+      isCoreModule: false,
+      isNodeModule: false,
+      moduleUri: './fixtures/local-module',
+    })
+  }
   t.end()
 })

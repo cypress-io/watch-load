@@ -21,8 +21,8 @@ class ModuleWatcher extends EventEmitter {
   }
 
   private _matchesFilter(info: LoadedModuleInfo) {
-    if (info.isCoreModule && this._filter.coreModules) return true
-    if (info.isNodeModule && this._filter.nodeModules) return true
+    if (info.isCoreModule) return this._filter.coreModules
+    if (info.isNodeModule) return this._filter.nodeModules
     return this._filter.userModules
   }
 
