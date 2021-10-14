@@ -17,9 +17,11 @@
     "@types/debug": "^4.1.7",
     "@types/node": "^16.10.4",
     "@types/tape": "^4.13.2",
+    "documentation": "^13.2.5",
     "foreach": "^2.0.5",
     "has-symbols": "^1.0.2",
     "tape": "^5.3.1",
+    "typedoc": "^0.22.5",
     "typescript": "^4.4.4"
   },
   "dependencies": {
