@@ -181,7 +181,7 @@ function isCore(uri: string) {
 
 const NODE_MODULE_RX = /node_modules\/.+/
 const USER_MODULE_RX = /^[./\\]/
-function isNodeMod(isCoreModule: boolean, uri: string, _parentUri: string) {
+function isNodeMod(isCoreModule: boolean, uri: string, parentUri: string) {
   if (isCoreModule) return false
 
   // easycase, `node_modules/` is in uri
@@ -193,8 +193,10 @@ function isNodeMod(isCoreModule: boolean, uri: string, _parentUri: string) {
   const isUserModule = USER_MODULE_RX.test(uri)
   if (!isUserModule) return true
 
-  // TODO(thlorenz): node_modules requiring relative modules (detect via parentUri)
-  return false
+  // modules loaded from node_modules via relative path are considered node_modules
+  // however this is only detectable by looking at the parent uri
+  const parentIsNodeModule = NODE_MODULE_RX.test(parentUri)
+  return parentIsNodeModule
 }
 
 // -----------------

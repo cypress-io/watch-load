@@ -15,7 +15,6 @@ function clearRequireCache() {
     delete require.cache[key]
   }
 }
-
 test('adding and removing watchers with default config', (t) => {
   _reset()
   // @ts-ignore
@@ -153,5 +152,42 @@ test('watching node modules only, requiring one directly', (t) => {
       moduleUri: 'foreach',
     })
   }
+  t.end()
+})
+
+test('watching node modules only, requiring one that requires another one', (t) => {
+  _reset()
+  clearRequireCache()
+
+  const watcher = addWatcher({ nodeModules: true, userModules: false })
+  let requiredModules: LoadedModuleInfo[] = []
+  watcher.on('match', (match) => {
+    requiredModules.push(match)
+  })
+
+  t.comment('+++ requiring parent node module +++')
+  // a node_module that doesn't require any core modules
+  require('has-symbols')
+
+  spok(
+    t,
+    requiredModules,
+    Object.assign(
+      [
+        {
+          moduleUri: 'has-symbols',
+          parentUri: '.',
+          isCoreModule: false,
+          isNodeModule: true,
+        },
+        {
+          moduleUri: './shams',
+          isCoreModule: false,
+          isNodeModule: true,
+        },
+      ],
+      { $topic: 'requiredModules' }
+    )
+  )
   t.end()
 })
