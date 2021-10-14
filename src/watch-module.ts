@@ -96,7 +96,18 @@ function maybeRestore() {
 // -----------------
 // API
 // -----------------
-export function addWatcher(partialFilter: Partial<LoadedModuleFilter> = {}) {
+
+/**
+ * Adds a module load watcher for the desired configuration. By default only
+ * _userModules_ are watched.
+ * The watcher will `emit('match', loadedModuleInfo)` for each loaded module
+ * that matches the filter.
+ *
+ * @param partialFilter the filter to use when matching loaded modules
+ */
+export function addWatcher(
+  partialFilter: Partial<LoadedModuleFilter> = {}
+): ModuleWatcher {
   const filter = Object.assign(
     { coreModules: false, nodeModules: false, userModules: true },
     partialFilter
@@ -112,6 +123,12 @@ export function addWatcher(partialFilter: Partial<LoadedModuleFilter> = {}) {
   return moduleWatcher
 }
 
+/**
+ * Removes a watcher that has been added before via {@link addWatcher}.
+ * Once removed it will no longer receive any module load `'match'` events.
+ *
+ * @param moduleWatcher the watcher to remove
+ */
 export function removeWatcher(moduleWatcher: ModuleWatcher) {
   logDebug('Trying to delete watcher with %o', moduleWatcher.filter)
   const found = ModuleWatcher.registeredWatchers.delete(moduleWatcher)
@@ -124,10 +141,19 @@ export function removeWatcher(moduleWatcher: ModuleWatcher) {
   return found
 }
 
+/**
+ * Provides stats about added {@link ModuleWatcher}s.
+ */
 export function watcherStats() {
   return { watchers: ModuleWatcher.registeredWatchers.size }
 }
 
+/**
+ * Configures global behavior of the {@link ModuleWatcher} via the provided
+ * {@link ModuleWatcherConfig}.
+ *
+ * @param config the config with which the current one is replaced
+ */
 export function configure(config: ModuleWatcherConfig) {
   ModuleWatcher.config = config
 }
@@ -154,10 +180,24 @@ function verifyFilter(filter: LoadedModuleFilter) {
   }
 }
 
+/**
+ * The globally used {@link ModuleWatcher} config.
+ *
+ * @property restore: if true the `Module._load` function will be restored when
+ * the watcher count goes to zero
+ */
 export type ModuleWatcherConfig = {
   restore: boolean
 }
 
+/**
+ * The information about a module that was loaded and matched a {@link ModuleWatcher} filter.
+ *
+ * @property moduleUri: the string under which this module was `required` or `imported`
+ * @property parentUri: path to the module that requested to load the module
+ * @property isCoreModule: if `true` the loaded module is one of the Node.js core modules
+ * @property isNodeModule: if `true` the loaded module is loaded from the `node_modules` folder
+ */
 export type LoadedModuleInfo = {
   moduleUri: string
   parentUri: string
@@ -165,6 +205,17 @@ export type LoadedModuleInfo = {
   isNodeModule: boolean
 }
 
+/**
+ * Specifies for which modules a `match` event should be emitted by the
+ * respective {@link ModuleWatcher}.
+ * One or more of the below properties can be `true`, but it is invalid if all are `false`
+ *
+ * @property coreModules: if `true` matches are emitted for Node.js core modules
+ * @property nodeModules: if `true` matches are emitted for modules loaded from
+ * the `node_modules` folder
+ * @property userModules: if `true` matches are emitted for modules that are
+ * neither core nor node_modules, but found inside the user's project folder
+ */
 export type LoadedModuleFilter = {
   coreModules: boolean
   nodeModules: boolean
